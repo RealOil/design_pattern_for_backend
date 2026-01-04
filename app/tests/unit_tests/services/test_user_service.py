@@ -25,4 +25,4 @@ def test_create_user_orchestrates_save_and_notify():
     assert len(repo.saved) == 1
     assert repo.saved[0].name == "Alice"
     assert len(notifier.sent) == 1
-ㄴ    assert notifier.sent[0].id == 1
+    assert notifier.sent[0].id == 1
