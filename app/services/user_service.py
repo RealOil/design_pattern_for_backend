@@ -1,34 +1,18 @@
-# user_service.py
-
-import sqlite3
-import requests
+from app.repositories.user_repository import User, UserRepository
+from app.clients.notification_client import NotificationClient
 
 class UserService:
-    def create_user(self, user_id: int, name: str):
-        # DB 연결
-        conn = sqlite3.connect("app.db")
-        cursor = conn.cursor()
+    def __init__(
+        self,
+        user_repo: UserRepository,
+        notifier: NotificationClient,
+    ) -> None:
+        self.user_repo = user_repo
+        self.notifier = notifier
 
-        try:
-            # DB 저장
-            cursor.execute(
-                "INSERT INTO users (id, name) VALUES (?, ?)",
-                (user_id, name)
-            )
+    def create_user(self, user_id: int, name: str) -> None:
+        user = User(id=user_id, name=name)
 
-            # 외부 API 호출
-            response = requests.post(
-                "https://external.api/send",
-                json={"user_id": user_id}
-            )
-            response.raise_for_status()
-
-            # 커밋
-            conn.commit()
-
-        except Exception as e:
-            conn.rollback()
-            raise e
-
-        finally:
-            conn.close()
+        # 오케스트레이션: 저장하고, 알림 요청
+        self.user_repo.save(user)
+        self.notifier.send_user_created(user)
